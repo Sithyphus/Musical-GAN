@@ -21,7 +21,8 @@ from keras.callbacks import ModelCheckpoint
 
 def train_network():
     """ Train a Neural Network to generate music """
-    notes = get_notes()
+    with open('data/notes','rb') as filepath:
+        notes = pickle.load(filepath)
 
     # get amount of pitch names
     n_vocab = len(set(notes))
@@ -32,33 +33,6 @@ def train_network():
 
     train(model, network_input, network_output)
 
-def get_notes():
-    """ Get all the notes and chords from the midi files in the ./midi_songs directory """
-    notes = []
-
-    for file in glob.glob("Raw_Files/*.mid"):
-        midi = converter.parse(file)
-
-        print("Parsing %s" % file)
-
-        notes_to_parse = None
-
-        try: # file has instrument parts
-            s2 = instrument.partitionByInstrument(midi)
-            notes_to_parse = s2.parts[0].recurse() 
-        except: # file has notes in a flat structure
-            notes_to_parse = midi.flat.notes
-
-        for element in notes_to_parse:
-            if isinstance(element, note.Note):
-                notes.append(str(element.pitch))
-            elif isinstance(element, chord.Chord):
-                notes.append('.'.join(str(n) for n in element.normalOrder))
-
-    with open('data/notes', 'wb') as filepath:
-        pickle.dump(notes, filepath)
-
-    return notes
 
 def prepare_sequences(notes, n_vocab):
     """ Prepare the sequences used by the Neural Network """
