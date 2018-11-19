@@ -10,14 +10,15 @@ from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM
 from keras.layers import Activation
+from keras.layers import Bidirectional
+from keras import optimizers
 
 def generate():
     """ Generate a piano midi file """
     #load the notes used to train the model
     with open('data/notes', 'rb') as filepath:
         notes = pickle.load(filepath)
-    print(notes)
-
+    notes = notes[:int(len(notes) * .01)]
     # Get all pitch names
     pitchnames = sorted(set(item for item in notes))
     # Get all pitch names
@@ -54,20 +55,21 @@ def prepare_sequences(notes, pitchnames, n_vocab):
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
-    model.add(LSTM(
+    model.add(Bidirectional(LSTM(
         512,
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
-    ))
+    )))
     model.add(Dropout(0.3))
-    model.add(LSTM(512, return_sequences=True))
+    model.add(Bidirectional(LSTM(512, return_sequences=True)))
     model.add(Dropout(0.3))
     model.add(LSTM(512))
     model.add(Dense(256))
     model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
+    optimizer = optimizers.RMSprop(lr = 0.001,rho = 0.9,epsilon = None,decay = 0.0)
+    model.compile(loss='categorical_crossentropy', optimizer=optimizer)
 
     # Load the weights to each node
     model.load_weights('weights.hdf5')

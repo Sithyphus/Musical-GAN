@@ -18,15 +18,18 @@ from keras.layers import LSTM
 from keras.layers import Activation
 from keras.utils import np_utils
 from keras.callbacks import ModelCheckpoint
+from keras.layers import Bidirectional
+from keras.layers import Conv1D
+from keras import optimizers
 
 def train_network():
     """ Train a Neural Network to generate music """
     with open('data/notes','rb') as filepath:
         notes = pickle.load(filepath)
-
+    notes = notes[:int(len(notes) * .01)]
     # get amount of pitch names
     n_vocab = len(set(notes))
-
+    
     network_input, network_output = prepare_sequences(notes, n_vocab)
 
     model = create_network(network_input, n_vocab)
@@ -68,21 +71,51 @@ def prepare_sequences(notes, n_vocab):
 def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
-    model.add(LSTM(
+    model.add(Bidirectional(LSTM(
         512,
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
-    ))
+    )))
     model.add(Dropout(0.3))
-    model.add(LSTM(512, return_sequences=True))
+    model.add(Bidirectional(LSTM(512, return_sequences=True)))
     model.add(Dropout(0.3))
     model.add(LSTM(512))
     model.add(Dense(256))
     model.add(Dropout(0.3))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
+    optimizer = optimizers.RMSprop(lr = 0.001,rho = 0.9,epsilon = None,decay = 0.0)
+    model.compile(loss='categorical_crossentropy', optimizer=optimizer)
+    '''
+    model.add(Conv1D(
+        filters = 512,
+        kernel_size = 4,
+        strides = 4,
+        activation = 'relu',
+        input_shape = (network_input.shape[1],network_input.shape[2])))
+    print(model.shape)
+
+    model.add(Bidirectional(LSTM(
+        512,
+        input_shape = (network_input.shape[1],network_input.shape[2]),
+        return_sequences = True)))
+    model.add(Dropout(0.3))
+    model.add(Bidirectional(LSTM(512, return_sequences = True)))
+    model.add(Dropout(0.3))
+    model.add(LSTM(512))
+    model.add(Dropout(0.3))
+    #model.add(Conv1D(1024,4,strides = 4, activation = 'relu'))
+    model.add(Bidirectional(LSTM(512, return_sequences = True)))
+    model.add(Dense(256))
+    model.add(Dense(n_vocab))
+    model.add(Activation('softplus'))
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop')
 
+    model.compile(loss=keras.losses.categorical_crossentropy,
+              optimizer=keras.optimizers.SGD(lr=0.01),
+              metrics=['accuracy'])
+    '''
+    
     return model
 
 def train(model, network_input, network_output):
@@ -97,7 +130,7 @@ def train(model, network_input, network_output):
     )
     callbacks_list = [checkpoint]
 
-    model.fit(network_input, network_output, epochs=5, batch_size=64, callbacks=callbacks_list)
+    model.fit(network_input, network_output, epochs=10, batch_size=64, callbacks=callbacks_list)
 
 
 train_network()
