@@ -9,9 +9,7 @@ Additional code provided by Rowel Atienza
     https://github.com/roatienza/Deep-Learning-Experiments/blob/master/Experiments/Tensorflow/GAN/dcgan_mnist.py
 '''
 
-""" This module prepares midi file data and feeds it to the neural
-    network for training """
-import glob
+
 import pickle
 import numpy
 from music21 import converter, instrument, note, chord, stream
@@ -20,17 +18,15 @@ from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM
 from keras.layers import Activation
-from keras.utils import np_utils
+from keras.utils import np_utils, multi_gpu_model
 from keras.callbacks import ModelCheckpoint
 from keras.layers import Bidirectional
-from keras.layers import Conv1D
 from keras import optimizers
 
 def train_network():
     """ Train a Neural Network to generate music """
     with open('data/notes','rb') as filepath:
         notes = pickle.load(filepath)
-    #notes = notes[:int(len(notes) * .001)]
     # get amount of pitch names
     n_vocab = len(set(notes))
     
@@ -81,12 +77,12 @@ def create_network(network_input, n_vocab):
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
     )))
-    model.add((LSTM(512, return_sequences=True)))
+    model.add(Bidirectional(LSTM(512, return_sequences=True)))
     model.add(LSTM(512))
     model.add(Dense(256))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
-    optimizer = optimizers.RMSprop(lr = 0.002,rho = 0.9,epsilon = None,decay = 0.0)
+    optimizer = optimizers.RMSprop(lr = 0.001,rho = 0.9,epsilon = None,decay = 0.0)
     model.compile(loss='categorical_crossentropy', optimizer=optimizer)
     return model
 
@@ -103,7 +99,7 @@ def train(model, network_input, network_output):
     )
     callbacks_list = [checkpoint]
 
-    model.fit(network_input, network_output, epochs=1, batch_size=64, callbacks=callbacks_list)
+    model.fit(network_input, network_output, epochs=200, batch_size=64, callbacks=callbacks_list)
 
 def prepare_gen_sequences(notes, pitchnames, n_vocab):
     """ Prepare the sequences used by the Neural Network """
