@@ -22,6 +22,7 @@ from keras.utils import np_utils, multi_gpu_model
 from keras.callbacks import ModelCheckpoint
 from keras.layers import Bidirectional
 from keras import optimizers
+import random
 
 def train_network():
     """ Train a Neural Network to generate music """
@@ -152,7 +153,10 @@ def generate_notes(model, network_input, pitchnames, n_vocab):
         prediction = model.predict(prediction_input, verbose=0)
 
         index = numpy.argmax(prediction)
-        result = int_to_note[index]
+        if index in int_to_note:
+            result = int_to_note[index]
+        else:
+            result = int_to_note[random.choice(list(int_to_note.keys()))]
         prediction_output.append(result)
 
         pattern.append(index)
