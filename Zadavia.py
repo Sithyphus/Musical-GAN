@@ -3,7 +3,7 @@ Octavia, musical generation A.I.
     Joseph Kopplin
     Braxton Lazar
     Jorge Barrios (Sisyphus Igor)
-With code provided by SigurÃ°ur SkÃºli
+With code provided by Sigurður Skúli
     https://github.com/Skuldur/Classical-Piano-Composer
 Additional code provided by Rowel Atienza
     https://github.com/roatienza/Deep-Learning-Experiments/blob/master/Experiments/Tensorflow/GAN/dcgan_mnist.py
@@ -74,12 +74,11 @@ def create_network(network_input, n_vocab):
     """ create the structure of the neural network """
     model = Sequential()
     model.add(Bidirectional(LSTM(
-        512,
+        128,
         input_shape=(network_input.shape[1], network_input.shape[2]),
         return_sequences=True
     )))
-    model.add(Bidirectional(LSTM(512, return_sequences=True)))
-    model.add(LSTM(512))
+    model.add(Bidirectional(LSTM(128, return_sequences=True)))
     model.add(Dense(256))
     model.add(Dense(n_vocab))
     model.add(Activation('softmax'))
@@ -100,7 +99,7 @@ def train(model, network_input, network_output):
     )
     callbacks_list = [checkpoint]
 
-    model.fit(network_input, network_output, epochs=200, batch_size=64, callbacks=callbacks_list)
+    model.fit(network_input, network_output, epochs=200, batch_size=1600, callbacks=callbacks_list)
 
 def prepare_gen_sequences(notes, pitchnames, n_vocab):
     """ Prepare the sequences used by the Neural Network """
