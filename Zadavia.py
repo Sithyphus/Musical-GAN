@@ -12,7 +12,7 @@ Additional code provided by Rowel Atienza
 
 import pickle
 import numpy
-from music21 import converter, instrument, note, chord, stream
+#from music21 import converter, instrument, note, chord, stream
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
@@ -178,7 +178,9 @@ def generate(model):
     network_input, normalized_input = prepare_gen_sequences(notes, pitchnames, n_vocab)
     model = model
     prediction_output = generate_notes(model, network_input, pitchnames, n_vocab)
-    create_midi(prediction_output)
+    with open('predictions', 'wb') as filepath:
+        pickle.dump(prediction_output, filepath)
+    #create_midi(prediction_output)
     
 def create_midi(prediction_output):
     """ convert the output from the prediction to notes and create a midi file
